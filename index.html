@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AS</title>
-    <!-- Firebase SDK'ları -->
+    <!-- Firebase SDK v8 (Kararlı ve Modül Hatası Vermeyen Sürüm) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -101,33 +101,16 @@
     </div>
 
     <script>
-        // ----------------------------------------------------
-        // BURAYA KİMLİK BİLGİLERİNİ YAPIŞTIRACAKSIN:
-        // ----------------------------------------------------
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCc8_aYFADgBWiVl-tEbA4etimi2YRl_VI",
-  authDomain: "as-game-d8c7f.firebaseapp.com",
-  databaseURL: "https://as-game-d8c7f-default-rtdb.firebaseio.com",
-  projectId: "as-game-d8c7f",
-  storageBucket: "as-game-d8c7f.firebasestorage.app",
-  messagingSenderId: "408314983354",
-  appId: "1:408314983354:web:ccfe8064e03382f3e72383",
-  measurementId: "G-6NJVEZ5QZC"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-        ;
-        // ----------------------------------------------------
+        // Kendi Firebase bilgilerini buraya yapıştıracaksın:
+        const firebaseConfig = {
+            apiKey: "SENIN_API_KEY",
+            authDomain: "projenin-adi.firebaseapp.com",
+            databaseURL: "https://projenin-adi-default-rtdb.firebaseio.com",
+            projectId: "projenin-adi",
+            storageBucket: "projenin-adi.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
 
         // Firebase Başlatma
         if (!firebase.apps.length) {
