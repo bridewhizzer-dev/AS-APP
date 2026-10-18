@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AS</title>
+    <!-- Firebase SDK'ları -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;      
+            --text-color: #e0e0e0;    
+            --primary: #879a81;       
+            --danger: #e07a5f;        
+            --card-bg: #1e1e1e;       
+            --shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 20px; padding-bottom: 40px; text-align: center; }
+        header { font-size: 2.5rem; font-weight: bold; color: var(--primary); margin-bottom: 30px; letter-spacing: 2px; }
+
+        .players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .player-card { background-color: var(--card-bg); padding: 20px 10px; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid #2c2c2c; }
+        .player-card h2 { font-size: 1.2rem; margin-bottom: 10px; }
+        .score { font-size: 3rem; font-weight: bold; color: var(--danger); margin-bottom: 15px; }
+
+        .counter-controls { display: flex; justify-content: center; gap: 10px; }
+        .btn-action { color: white; border: none; width: 45px; height: 45px; border-radius: 12px; font-size: 1.5rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-minus { background-color: #555; }
+        .btn-plus { background-color: var(--danger); }
+        .btn-action:active { opacity: 0.7; }
+
+        .bank-section { background-color: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid #2c2c2c; }
+        .bank-section h2 { margin-bottom: 15px; font-size: 1.3rem; }
+        .jar { width: 80px; height: 120px; border: 4px solid #555; border-radius: 10px 10px 20px 20px; margin: 0 auto 10px auto; position: relative; overflow: hidden; background-color: #2c2c2c; }
+        .jar-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background-color: var(--primary); transition: height 0.5s ease; }
+        
+        .daily-money { font-size: 2rem; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
+        .total-money { font-size: 1rem; color: #888; margin-bottom: 15px; }
+        
+        .money-controls { display: flex; gap: 10px; }
+        .money-input { flex: 1; padding: 12px; background-color: #2c2c2c; color: var(--text-color); border: 1px solid #444; border-radius: 10px; font-size: 1rem; outline: none; }
+        .btn-add-money { background-color: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+
+        .history-section { background-color: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid #2c2c2c; margin-bottom: 30px; text-align: left; }
+        .history-section h2 { font-size: 1.3rem; margin-bottom: 15px; text-align: center; }
+        .history-list { list-style: none; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+        .history-item { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        .history-item:last-child { border-bottom: none; }
+        .history-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .history-details { color: #aaa; font-size: 0.85rem; }
+
+        .btn-end-day { background-color: #3a3a3a; color: var(--text-color); border: 1px solid #555; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-end-day:active { background-color: #555; }
+        
+        #status { font-size: 0.8rem; color: #888; margin-top: -20px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <header>AS</header>
+    <div id="status">Canlı Bağlantı Kuruluyor...</div>
+
+    <div class="players-grid">
+        <div class="player-card">
+            <h2>Arda</h2>
+            <div class="score" id="arda-score">0</div>
+            <div class="counter-controls">
+                <button class="btn-action btn-minus" onclick="updateScore('arda', -1)">-</button>
+                <button class="btn-action btn-plus" onclick="updateScore('arda', 1)">+</button>
+            </div>
+        </div>
+        <div class="player-card">
+            <h2>Sima</h2>
+            <div class="score" id="sima-score">0</div>
+            <div class="counter-controls">
+                <button class="btn-action btn-minus" onclick="updateScore('sima', -1)">-</button>
+                <button class="btn-action btn-plus" onclick="updateScore('sima', 1)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bank-section">
+        <h2>Günlük Ceza Kumbarası</h2>
+        <div class="jar"><div class="jar-fill" id="jar-fill"></div></div>
+        <div class="daily-money" id="daily-money">0 ₺</div>
+        <div class="total-money" id="total-money">Toplam Biriken: 0 ₺</div>
+        
+        <div class="money-controls">
+            <input type="number" id="money-input" class="money-input" placeholder="Tutar girin...">
+            <button class="btn-add-money" onclick="addMoney()">Ekle</button>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h2>Geçmiş Günler</h2>
+        <ul class="history-list" id="history-list"></ul>
+        <button class="btn-end-day" onclick="endDay()">Günü Tamamla ve Kaydet</button>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // BURAYA KİMLİK BİLGİLERİNİ YAPIŞTIRACAKSIN:
+        // ----------------------------------------------------
+        // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCc8_aYFADgBWiVl-tEbA4etimi2YRl_VI",
+  authDomain: "as-game-d8c7f.firebaseapp.com",
+  databaseURL: "https://as-game-d8c7f-default-rtdb.firebaseio.com",
+  projectId: "as-game-d8c7f",
+  storageBucket: "as-game-d8c7f.firebasestorage.app",
+  messagingSenderId: "408314983354",
+  appId: "1:408314983354:web:ccfe8064e03382f3e72383",
+  measurementId: "G-6NJVEZ5QZC"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+        ;
+        // ----------------------------------------------------
+
+        // Firebase Başlatma
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        const appRef = db.ref('asApp');
+
+        let localData = { arda: 0, sima: 0, money: 0, dailyMoney: 0, history: [] };
+
+        appRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            document.getElementById('status').innerText = "🟢 Canlı Bağlantı Aktif";
+            document.getElementById('status').style.color = "var(--primary)";
+
+            if (data) {
+                localData = data;
+                if (!localData.history) localData.history = [];
+                updateUI();
+            } else {
+                appRef.set(localData);
+            }
+        });
+
+        function updateUI() {
+            document.getElementById('arda-score').innerText = localData.arda || 0;
+            document.getElementById('sima-score').innerText = localData.sima || 0;
+            document.getElementById('daily-money').innerText = (localData.dailyMoney || 0) + " ₺";
+            document.getElementById('total-money').innerText = "Toplam Biriken: " + (localData.money || 0) + " ₺";
+
+            let fillPercentage = Math.min(((localData.dailyMoney || 0) / 1000) * 100, 100);
+            document.getElementById('jar-fill').style.height = fillPercentage + "%";
+
+            let historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            if (!localData.history || localData.history.length === 0) {
+                historyList.innerHTML = '<li class="history-item" style="align-items:center; color:#888;">Henüz kayıt yok.</li>';
+            } else {
+                localData.history.forEach(item => {
+                    let li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <div class="history-header">
+                            <strong>${item.date}</strong>
+                            <span style="color: var(--primary);">+${item.dailyMoney} ₺</span>
+                        </div>
+                        <div class="history-details">
+                            Arda: ${item.arda} | Sima: ${item.sima}
+                        </div>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+        }
+
+        function updateScore(player, amount) {
+            db.ref('asApp/' + player).transaction((currentVal) => {
+                let newVal = (currentVal || 0) + amount;
+                return newVal >= 0 ? newVal : 0;
+            });
+        }
+
+        function addMoney() {
+            let input = document.getElementById('money-input');
+            let amount = parseInt(input.value);
+            
+            if (!isNaN(amount) && amount > 0) {
+                db.ref('asApp/dailyMoney').transaction(curr => (curr || 0) + amount);
+                db.ref('asApp/money').transaction(curr => (curr || 0) + amount);
+                input.value = '';
+            }
+        }
+
+        function endDay() {
+            if((localData.arda || 0) === 0 && (localData.sima || 0) === 0 && (localData.dailyMoney || 0) === 0) {
+                alert("Bugün hiç ceza puanı veya para girişi yapılmamış.");
+                return;
+            }
+
+            let today = new Date().toLocaleDateString('tr-TR');
+            let newHistory = localData.history ? [...localData.history] : [];
+            
+            newHistory.unshift({
+                date: today,
+                arda: localData.arda || 0,
+                sima: localData.sima || 0,
+                dailyMoney: localData.dailyMoney || 0
+            });
+
+            appRef.update({
+                arda: 0,
+                sima: 0,
+                dailyMoney: 0,
+                history: newHistory
+            }).then(() => {
+                alert("Gün başarıyla kaydedildi! Bardak ve skorlar tüm cihazlarda sıfırlandı.");
+            });
+        }
+    </script>
+</body>
+</html>
